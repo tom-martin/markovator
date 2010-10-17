@@ -11,14 +11,16 @@ from status_endpoint import StatusHandler, ClearStatusHandler
 
 import twitter_settings
 
-def create_markovated_tweet(tweets, max_length):
+def create_markovated_tweet(tweets, max_length, unwanted_markovations=[]):
     tweets_texts = map(lambda t: t['text'].strip(), tweets)
     markovator = Markovator()
     markovator.parse_sentences(tweets_texts)
     markovation = markovator.markovate()
 
+    unwanted_markovations.extend(tweets_texts)
+
     count = 0
-    while len(markovation) > max_length or markovation in tweets_texts:
+    while len(markovation) > max_length or markovation in unwanted_markovations:
         markovation = markovator.markovate()
         count += 1
         if count > 20:
@@ -122,7 +124,9 @@ class TweetsProcessor(webapp.RequestHandler):
             app_status['latest_tweet'] = 'Could not generate tweet (not enough eligible tweets)'
             return
 
-        best_tweet = create_markovated_tweet(tweets, 140)
+        recent_tweets = twitter.get_tweets(twitter_settings.screen_name)
+
+        best_tweet = create_markovated_tweet(tweets, 140, map(lambda t: t['text'].strip(), recent_tweets))
 
         if best_tweet != None:
             twitter.post_tweet(best_tweet)

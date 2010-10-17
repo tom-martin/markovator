@@ -12,12 +12,18 @@ import status
 
 class StatusHandler(webapp.RequestHandler):
   def get(self):
-    self.response.out.write("<p>Reply since id: " + str(status.get_reply_since_id()) + "</p>")
-    self.response.out.write("<form action='/status/' method='POST'><label for='since_id'>Change <input type='text' name='since_id'></input></form>")
+    entity = status.load_entity()
+    self.response.out.write("<pre>" + entity.json_string +  "</pre>")
+    self.response.out.write("<form action='/status/' method='POST'><label for='json_status'>Change</label><textarea name='json_status' rows='2' cols='100'>" + entity.json_string + "</textarea><input type='submit' value='update status'/></form>")
 
 
   def post(self):
-    status.set_reply_since_id(int(self.request.get("since_id")))
+    status.save(json.loads(self.request.get("json_status")))
     self.get()
+
+class ClearStatusHandler(webapp.RequestHandler):
+  def get(self):
+    status.clear()
+    self.response.out.write("<p>Cleared</p>")
 
 

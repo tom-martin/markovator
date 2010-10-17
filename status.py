@@ -1,33 +1,33 @@
+import logging
+from django.utils import simplejson as json
 from google.appengine.ext import db
 
 class AppStatus(db.Model):
-    reply_since_id = db.IntegerProperty()
+    json_string = db.StringProperty()
 
-
-def get_reply_since_id():
+def clear():
     app_statuses = AppStatus.all()
+    for app_status in app_statuses:
+        app_status.delete()
 
-    if app_statuses.count() == 0:
-        AppStatus().put()
-        return -1
-
-    return app_statuses[0].reply_since_id
-
-def set_reply_since_id(since_id):
+def load_entity():
     app_statuses = AppStatus.all()
 
     if app_statuses.count() == 0:
         app_status = AppStatus()
-    else:
-        app_status = app_statuses[0]
+        app_status.json_string = "{}"
+        app_status.put()
+        return app_status
 
-    app_status.reply_since_id = since_id
-
-    another_app_status = AppStatus()
-    another_app_status.reply_since_id = 12
-
-    app_status.put()
+    return app_statuses[0]
 
 
+def load():
+    return json.loads(load_entity().json_string)
+
+def save(app_status):
+    current_app_status = load_entity()
+    current_app_status.json_string = json.dumps(app_status)
+    current_app_status.put()
 
 

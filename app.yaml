@@ -7,6 +7,6 @@ handlers:
 - url: /cron/.*
   script: main.py
   login: admin
-- url: /status/
+- url: /status/.*
   script: main.py
   login: admin

@@ -7,7 +7,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 import twitter
 import status
 from markovate import Markovator
-from status_endpoint import StatusHandler
+from status_endpoint import StatusHandler, ClearStatusHandler
 
 import twitter_settings
 
@@ -48,7 +48,9 @@ class RepliesProcessor(webapp.RequestHandler):
     def get(self):
         self.response.out.write('<html><body>')
 
-        since_id = status.get_reply_since_id()
+        app_status = status.load()
+
+        since_id = app_status.get('reply_since_id', -1)
 
         if since_id:
             mentions = twitter.get_mentions(since_id)
@@ -63,14 +65,17 @@ class RepliesProcessor(webapp.RequestHandler):
         for mention in reversed(mentions):
             self.response.out.write("<p>" + str(mention['id']) + " | " + mention['user']['screen_name'] + " protected("+ str(mention['user']['protected']) + "): " + mention['text'] +"</p>")
 
-        self.reply_to_user(mentions[-1]['user'])
+        self.reply_to_user(mentions[-1]['user'], app_status)
 
         twitter.follow_user(mentions[-1]['user']['screen_name'])
-        status.set_reply_since_id(mentions[-1]['id'])
+        app_status['reply_since_id'] = mentions[-1]['id']
+        app_status['latest_user_replied_to'] = mentions[-1]['user']['screen_name']
+
+        status.save(app_status)
 
         self.response.out.write('</body></html>')
 
-    def reply_to_user(self, user):
+    def reply_to_user(self, user, app_status):
         if user['protected']:
             self.response.out.write("@" + user['screen_name'] + " sorry, I can't process protected users :(")
             return
@@ -83,7 +88,9 @@ class RepliesProcessor(webapp.RequestHandler):
 
         if len(tweets) <= 1:
             self.response.out.write("<p>Not enough tweets</p>")
-            twitter.post_tweet("@" + screen_name + " sorry, you need to tweet more :(")
+            fail_reply = "@" + screen_name + " sorry, you need to tweet more :("
+            twitter.post_tweet(fail_reply)
+            app_status.set['latest_reply'] = fail_reply
             return
 
         tweet_prefix = '@' + screen_name + ' markovated: '
@@ -92,13 +99,18 @@ class RepliesProcessor(webapp.RequestHandler):
         best_tweet = create_markovated_tweet(tweets, ideal_tweet_length)
         
         if best_tweet != None:
-            twitter.post_tweet(tweet_prefix + best_tweet)
-            self.response.out.write('<p>' + tweet_prefix + best_tweet + '</p>' + '(' + str(len(tweet_prefix + best_tweet)) + ')')
+            tweet = tweet_prefix + best_tweet
+            twitter.post_tweet(tweet)
+            self.response.out.write('<p>' + tweet + '</p>' + '(' + str(len(tweet_prefix + best_tweet)) + ')')
+            app_status['latest_reply'] = tweet
         else:
             self.response.out.write('<p>Could not generate reply</p>')
+            app_status['latest_reply'] = 'Could not generate'
 
 class TweetsProcessor(webapp.RequestHandler):
     def get(self):
+
+        app_status = status.load()
 
         # Just get the latest tweets
         tweets = twitter.get_timeline_tweets(800)
@@ -107,6 +119,7 @@ class TweetsProcessor(webapp.RequestHandler):
 
         if len(tweets) <= 1:
             self.response.out.write('<p>Could not generate tweet (not enough eligible tweets)</p>')
+            app_status['latest_tweet'] = 'Could not generate tweet (not enough eligible tweets)'
             return
 
         best_tweet = create_markovated_tweet(tweets, 140)
@@ -114,11 +127,16 @@ class TweetsProcessor(webapp.RequestHandler):
         if best_tweet != None:
             twitter.post_tweet(best_tweet)
             self.response.out.write('<p>' + best_tweet + '</p>' + '(' + str(len(best_tweet)) + ')')
+            app_status['latest_tweet'] =  best_tweet;
         else:
             self.response.out.write('<p>Could not generate tweet</p>')
+            app_status['latest_tweet'] = 'Could not generate tweet'
+            
+        status.save(app_status)
 
 application = webapp.WSGIApplication([('/cron/processReplies/', RepliesProcessor),
                                       ('/status/', StatusHandler),
+                                      ('/status/clear/', ClearStatusHandler),
                                       ('/cron/processTweets/', TweetsProcessor)],
                                        debug=True)
 

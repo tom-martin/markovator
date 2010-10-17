@@ -1,3 +1,4 @@
+import logging
 from django.utils import simplejson as json
 
 from google.appengine.ext import webapp
@@ -11,19 +12,37 @@ from status_endpoint import StatusHandler
 import twitter_settings
 
 def create_markovated_tweet(tweets, max_length):
-    tweets_texts = map(lambda t: t['text'], tweets)
+    tweets_texts = map(lambda t: t['text'].strip(), tweets)
     markovator = Markovator()
     markovator.parse_sentences(tweets_texts)
     markovation = markovator.markovate()
 
+    count = 0
     while len(markovation) > max_length or markovation in tweets_texts:
         markovation = markovator.markovate()
+        count += 1
+        if count > 20:
+            return None
 
     return markovation
+
+def filter_tweets(tweets):
+    return filter_out_mentions(filter_out_links(filter_out_bad_words(tweets)))
 
 def filter_out_mentions(tweets):
     # TODO This is to be polite, we could keep tweets that mention people that follow us
     return filter(lambda t:not '@' in t['text'], tweets)
+
+def filter_out_links(tweets):
+    # Links are almost guaranteed to ruin the context of the markovation
+    return filter(lambda t:not 'http://' in t['text'].lower(), tweets)
+
+def filter_out_bad_words(tweets):
+    # Might be offensive/inappropriate for humour
+    return filter(lambda t:not ('cancer' in t['text'].lower() or
+                                'r.i.p' in t['text'].lower() or
+                                'RIP' in t['text']), tweets)
+
 
 class RepliesProcessor(webapp.RequestHandler):
     def get(self):
@@ -60,9 +79,9 @@ class RepliesProcessor(webapp.RequestHandler):
 
         self.response.out.write("<h1>" + screen_name + "</h1>")
 
-        tweets = filter_out_mentions(twitter.get_tweets(screen_name))
+        tweets = filter_tweets(twitter.get_tweets(screen_name))
 
-        if len(tweets) == 0:
+        if len(tweets) <= 1:
             self.response.out.write("<p>Not enough tweets</p>")
             twitter.post_tweet("@" + screen_name + " sorry, you need to tweet more :(")
             return
@@ -71,26 +90,32 @@ class RepliesProcessor(webapp.RequestHandler):
         ideal_tweet_length = 140 - len(tweet_prefix)
         
         best_tweet = create_markovated_tweet(tweets, ideal_tweet_length)
-        twitter.post_tweet(tweet_prefix + best_tweet)
-
-        self.response.out.write('<p>' + tweet_prefix + best_tweet + '</p>' + '(' + str(len(tweet_prefix + best_tweet)) + ')')
+        
+        if best_tweet != None:
+            twitter.post_tweet(tweet_prefix + best_tweet)
+            self.response.out.write('<p>' + tweet_prefix + best_tweet + '</p>' + '(' + str(len(tweet_prefix + best_tweet)) + ')')
+        else:
+            self.response.out.write('<p>Could not generate reply</p>')
 
 class TweetsProcessor(webapp.RequestHandler):
     def get(self):
 
-        #Just get the latest tweets
+        # Just get the latest tweets
         tweets = twitter.get_timeline_tweets(800)
-        tweets = filter_out_mentions(tweets)
+        tweets = filter_tweets(tweets)
         tweets = filter(lambda t:not t['user']['screen_name'] == twitter_settings.screen_name, tweets)
 
-        if len(tweets) < 5:
+        if len(tweets) <= 1:
+            self.response.out.write('<p>Could not generate tweet (not enough eligible tweets)</p>')
             return
 
         best_tweet = create_markovated_tweet(tweets, 140)
 
-        twitter.post_tweet(best_tweet)
-        self.response.out.write('<p>' + best_tweet + '</p>' + '(' + str(len(best_tweet)) + ')')
-     
+        if best_tweet != None:
+            twitter.post_tweet(best_tweet)
+            self.response.out.write('<p>' + best_tweet + '</p>' + '(' + str(len(best_tweet)) + ')')
+        else:
+            self.response.out.write('<p>Could not generate tweet</p>')
 
 application = webapp.WSGIApplication([('/cron/processReplies/', RepliesProcessor),
                                       ('/status/', StatusHandler),

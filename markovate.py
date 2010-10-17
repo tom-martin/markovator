@@ -25,7 +25,7 @@ class Markovator:
             markovation += current_reply_word + " "
             current_reply_word = random.choice(self.words[current_reply_word]['following_words'])['word']
 
-        return markovation
+        return markovation.strip()
 
     def parse_sentence(self, sentence):
         new_words = sentence.lstrip().rstrip().split(' ')    

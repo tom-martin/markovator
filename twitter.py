@@ -14,7 +14,7 @@ def get_mentions(since=-1):
     client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
 
     if since > -1:
-        resp, content = client.request("http://api.twitter.com/1/statuses/mentions.json?count=20&since_id=" + str(since), "GET")
+        resp, content = client.request("http://api.twitter.com/1/statuses/mentions.json?count=800&since_id=" + str(since), "GET")
     else:
         resp, content = client.request("http://api.twitter.com/1/statuses/mentions.json?count=200", "GET")
 
@@ -22,7 +22,7 @@ def get_mentions(since=-1):
 
 def get_tweets(screen_name):
     h = httplib2.Http(timeout=30)
-    resp, content = h.request('http://api.twitter.com/1/statuses/user_timeline.json?screen_name=' + screen_name + '&count=200&trim_user=true', "GET")
+    resp, content = h.request('http://api.twitter.com/1/statuses/user_timeline.json?screen_name=' + screen_name + '&count=800&trim_user=true', "GET")
 
     return json.loads(content)
 
@@ -44,7 +44,7 @@ def get_timeline_tweets_since(since_id=-1):
         # TODO 1 or 0?
         current_page = 0
         while len(tweets) == 0 or not since_id >= max(map(lambda t:int(t['id']), tweets)):
-            resp, content = client.request('http://api.twitter.com/1/statuses/friends_timeline.json?count=2&page=' + str(current_page), "GET")
+            resp, content = client.request('http://api.twitter.com/1/statuses/friends_timeline.json?count=800&page=' + str(current_page), "GET")
             new_tweets = json.loads(content)
             if len(new_tweets) == 0:
                 break

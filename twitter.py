@@ -6,6 +6,8 @@ import oauth2 as oauth
 
 import httplib2
 
+import urllib
+
 import twitter_settings
 
 def get_mentions(since=-1):
@@ -53,12 +55,12 @@ def get_timeline_tweets_since(since_id=-1):
 
 def post_tweet(text):
     client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
-    resp, content = client.request("http://api.twitter.com/1/statuses/update.json", "POST", "status=" + text)
+    resp, content = client.request("http://api.twitter.com/1/statuses/update.json", "POST", urllib.urlencode([("status", text)]))
 
     return content
 
 def follow_user(screen_name):
     client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
-    resp, content = client.request("http://api.twitter.com/1/friendships/create.json", "POST", "screen_name=" + screen_name)
+    resp, content = client.request("http://api.twitter.com/1/friendships/create.json", "POST", urllib.urlencode([("screen_name", screen_name)]))
 
     return content

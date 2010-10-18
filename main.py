@@ -90,9 +90,9 @@ class RepliesProcessor(webapp.RequestHandler):
 
         if len(tweets) <= 1:
             self.response.out.write("<p>Not enough tweets</p>")
-            fail_reply = "@" + screen_name + " sorry, you need to tweet more :("
+            fail_reply = "@" + screen_name + " sorry, you need to tweet more (or tweet less @ mentions and links) :("
             twitter.post_tweet(fail_reply)
-            app_status.['latest_reply'] = fail_reply
+            app_status['latest_reply'] = fail_reply
             return
 
         tweet_prefix = '@' + screen_name + ' markovated: '

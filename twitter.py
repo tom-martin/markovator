@@ -89,3 +89,9 @@ def follow_user(screen_name):
     # TODO Check status code
 
     return content
+
+def get_rate_limit_status(): 
+    client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
+    resp, content = client.request('http://api.twitter.com/1/account/rate_limit_status.json', "GET")
+
+    return json.loads(content)

@@ -31,9 +31,14 @@ def get_mentions(since=-1):
         
     return json.loads(content)
 
-def get_tweets(screen_name):
-    h = httplib2.Http(timeout=30)
-    resp, content = h.request('http://api.twitter.com/1/statuses/user_timeline.json?screen_name=' + screen_name + '&count=800&trim_user=true', "GET")
+def get_tweets(screen_name, auth=False):
+    if auth:
+        client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
+    else:
+        client = httplib2.Http(timeout=30)
+
+
+    resp, content = client.request('http://api.twitter.com/1/statuses/user_timeline.json?screen_name=' + screen_name + '&count=800&trim_user=true', "GET")
 
     if resp.status != 200:
       raise TwitterError(resp.status, content)
@@ -90,8 +95,11 @@ def follow_user(screen_name):
 
     return content
 
-def get_rate_limit_status(): 
-    client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
+def get_rate_limit_status(auth=False):
+    if auth:
+        client = oauth.Client(twitter_settings.consumer, twitter_settings.token)
+    else:
+        client = httplib2.Http(timeout=30)
     resp, content = client.request('http://api.twitter.com/1/account/rate_limit_status.json', "GET")
 
     return json.loads(content)

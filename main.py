@@ -86,7 +86,7 @@ class RepliesProcessor(webapp.RequestHandler):
 
         self.response.out.write("<h1>" + screen_name + "</h1>")
 
-        tweets = filter_tweets(twitter.get_tweets(screen_name))
+        tweets = filter_tweets(twitter.get_tweets(screen_name, True))
 
         if len(tweets) <= 1:
             self.response.out.write("<p>Not enough tweets</p>")
@@ -124,7 +124,7 @@ class TweetsProcessor(webapp.RequestHandler):
             app_status['latest_tweet'] = 'Could not generate tweet (not enough eligible tweets)'
             return
 
-        recent_tweets = twitter.get_tweets(twitter_settings.screen_name)
+        recent_tweets = twitter.get_tweets(twitter_settings.screen_name, True)
 
         best_tweet = create_markovated_tweet(tweets, 140, map(lambda t: t['text'].strip(), recent_tweets))
 

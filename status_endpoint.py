@@ -19,7 +19,7 @@ class StatusHandler(webapp.RequestHandler):
     self.response.out.write("<pre>" + entity.json_string +  "</pre>")
     self.response.out.write("<form action='/status/' method='POST'><label for='json_status'>Change</label><textarea name='json_status' rows='2' cols='100'>" + entity.json_string + "</textarea><input type='submit' value='update status'/></form>")
 
-    self.response.out.write("<pre>" + json.dumps(twitter.get_rate_limit_status()) + "</pre>");
+    self.response.out.write("<pre>" + json.dumps(twitter.get_rate_limit_status(True)) + "</pre>");
 
 
   def post(self):

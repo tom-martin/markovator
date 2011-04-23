@@ -1,6 +1,6 @@
 Making nonsense out of your carefully crafted tweets. 
 
-Google app engine app that controls a twitter bot that uses markov chains to produce interesting tweets based on it's followers tweets and the twitterers that mention it. When a user tweets a mention of the bot it will respond with a "markovation" of the last 800 tweets by that user (that don't contain links or mentions of other users).  It will also follow that user.  Every two hours the it will tweet a markovation of the latest 800 tweets from all of the users it follows.
+Google app engine app that controls a twitter bot that uses markov chains to produce interesting tweets based on it's followers tweets and the twitterers that mention it. When a user tweets a mention of the bot it will respond with a "markovation" of the last 800 tweets by that user (that don't contain links or mentions of other users).  It will also follow that user.  Every two hours it will tweet a markovation of the latest 800 tweets from all of the users it follows.
 
 Live markovator bot is running here: http://twitter.com/markovator
 More info here: http://www.heychinaski.com/blog/2010/10/18/markovator-python-google-app-engine-markov-chains-twitter/

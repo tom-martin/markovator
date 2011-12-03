@@ -3,7 +3,7 @@ from django.utils import simplejson as json
 from google.appengine.ext import db
 
 class AppStatus(db.Model):
-    json_string = db.StringProperty()
+    json_string = db.TextProperty()
 
 def clear():
     app_statuses = AppStatus.all()

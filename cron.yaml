@@ -1,9 +1,0 @@
-cron:
-- description: process replies
-  url: /cron/processReplies/
-  schedule: every 1 minutes
-- description: process tweets
-  url: /cron/processTweets/
-  schedule: every 10 minutes
-
-

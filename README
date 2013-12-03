@@ -1,9 +1,14 @@
 Making nonsense out of your carefully crafted tweets. 
 
-Google app engine app that controls a twitter bot that uses markov chains to produce interesting tweets based on it's followers tweets and the twitterers that mention it. When a user tweets a mention of the bot it will respond with a "markovation" of the last 800 tweets by that user (that don't contain links or mentions of other users).  It will also follow that user.  Every two hours it will tweet a markovation of the latest 800 tweets from all of the users it follows.
+Python app that controls a twitter bot that uses markov chains to produce interesting tweets based on it's followers tweets and the twitterers that mention it. When a user tweets a mention of the bot it will respond with a "markovation" of the last 800 tweets by that user (that don't contain links or mentions of other users).  It will also follow that user.  Every two hours it will tweet a markovation of the latest 800 tweets from all of the users it follows.
 
 Live markovator bot is running here: http://twitter.com/markovator
 More info here: http://www.heychinaski.com/blog/2010/10/18/markovator-python-google-app-engine-markov-chains-twitter/
 
-Use like a regular appengine project but make sure to set the screen_name, token and consumer settings in the twitter_settings.py.  The screen name should be the username of the twitter account that the bot is hosted on. Consumer should be the key and secret of a twitter app that you have registered and the token should be the key and secret of the twitter account for that app. See https://dev.twitter.com/pages/oauth_single_token for info on getting a single access token and avoiding the oauth flow.
+Easiest way to use the script is to repeatedly call it using something like cron. Make sure to set the screen_name, token and consumer settings in the twitter_settings.py.  The screen name should be the username of the twitter account that the bot is hosted on. Consumer should be the key and secret of a twitter app that you have registered and the token should be the key and secret of the twitter account for that app. See https://dev.twitter.com/pages/oauth_single_token for info on getting a single access token and avoiding the oauth flow.
+
+Example crontab entry:
+
+    * * * * * cd /whatevs/markovator && python main.py >> markovator.log 2>&1
+
 
